@@ -134,7 +134,10 @@ export function renderGetawayCard(ctx, stats) {
   const cardH = 300;
   const minutes = Math.floor(stats.timeLeft / 60);
   const seconds = Math.floor(stats.timeLeft % 60);
-  ctx.fillStyle = 'rgba(10,12,20,0.72)';
+  // Backdrop near-opaque (0.96): the ANTECHAMBER room label still
+  // showed through at 0.90 behind the stats lines. The museum around
+  // the card stays fully visible; only the card's own patch is solid.
+  ctx.fillStyle = 'rgba(10,12,20,0.96)';
   ctx.fillRect(cardX, cardY, cardW, cardH);
   ctx.strokeStyle = PALETTE.gold;
   ctx.lineWidth = 2;

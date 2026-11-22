@@ -624,9 +624,18 @@ export function drawTerminals(ctx, museum, time) {
     ctx.fillStyle = PALETTE.text;
     ctx.font = '600 10px Verdana, sans-serif';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    const label = terminal.effect === 'cameras' ? 'CAMERAS' : 'VAULT DOOR';
-    ctx.fillText(terminal.hacked ? `${label} OFF` : label, terminal.x, terminal.y - 22);
+    // Labels sit BENEATH the terminal icon, never above it: the label
+    // above the camera terminal touched laser-3's left emitter box.
+    // The vault label is shortened and clamped inside the room margin
+    // so its right edge never reaches the floor's right border.
+    const label = terminal.effect === 'cameras'
+      ? (terminal.hacked ? 'CAMERAS OFF' : 'CAMERAS')
+      : (terminal.hacked ? 'VAULT OFF' : 'VAULT');
+    const labelWidth = ctx.measureText(label).width;
+    const rightMargin = FLOOR.x + FLOOR.w - 8;
+    const labelX = Math.min(terminal.x, rightMargin - labelWidth / 2);
+    ctx.textBaseline = 'top';
+    ctx.fillText(label, labelX, terminal.y + 24);
     ctx.textBaseline = 'top';
   }
 }
