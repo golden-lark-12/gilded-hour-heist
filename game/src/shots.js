@@ -4,7 +4,7 @@
 
 import { createGameState } from './game.js';
 
-export const SHOT_NAMES = ['start', 'play', 'vault', 'escape'];
+export const SHOT_NAMES = ['play', 'tools', 'vault', 'escape'];
 
 export function applyShotState(state, shotName) {
   const museum = state.museum;
@@ -15,29 +15,42 @@ export function applyShotState(state, shotName) {
     guard.pause = 0;
   };
 
-  if (shotName === 'start') {
-    state.mode = 'title';
+  if (shotName === 'tools') {
+    // Live gameplay: the thief slips through the vent gap inside a smoke
+    // cloud while the EMP holds cameras and lasers down — tools spent,
+    // routes proven, cones still to be read.
+    state.mode = 'play';
     state.objective = 'REACH THE VAULT TERMINAL';
     state.objectiveDetail = 'Grab side loot, hack terminals, stay out of cones.';
-    state.player.x = 116;
-    state.player.y = 600;
-    state.player.angle = -Math.PI / 2;
-    state.alarm = 0;
-    state.timeLeft = 240;
-    state.lootValue = 0;
-    guardAt(museum.guards[0], 600, 170, 0.4);
-    guardAt(museum.guards[1], 480, 640, Math.PI);
-    guardAt(museum.guards[2], 900, 130, 0);
-    museum.cameras[0].angle = Math.PI * 0.75;
-    museum.cameras[1].angle = Math.PI * 0.25;
+    state.player.x = 408;
+    state.player.y = 310;
+    state.player.angle = 0;
+    state.alarm = 12;
+    state.alarmPeak = 12;
+    state.timeLeft = 205;
+    state.lootValue = 2050;
+    state.lootTaken = 2;
+    museum.loot[0].taken = true;
+    museum.loot[1].taken = true;
+    state.smokeCharges = 1;
+    state.empCharges = 0;
+    state.empTime = 5;
+    state.smokes = [{ x: 408, y: 310, radius: 74, life: 3 }];
+    guardAt(museum.guards[0], 620, 200, Math.PI * 0.6);
+    guardAt(museum.guards[1], 560, 560, -Math.PI / 2);
+    guardAt(museum.guards[2], 1010, 200, Math.PI * 0.4);
+    museum.guards[0].alert = 30;
+    museum.cameras[0].angle = Math.PI * 0.9;
+    museum.cameras[1].angle = Math.PI * 0.1;
+    museum.terminals[0].hackProgress = 40;
     return state;
   }
 
   if (shotName === 'play') {
     state.mode = 'play';
-    state.player.x = 640;
-    state.player.y = 300;
-    state.player.angle = Math.PI / 2;
+    state.player.x = 600;
+    state.player.y = 268;
+    state.player.angle = 0;
     state.alarm = 34;
     state.alarmPeak = 34;
     state.timeLeft = 192;
@@ -57,7 +70,11 @@ export function applyShotState(state, shotName) {
   }
 
   if (shotName === 'vault') {
-    state.mode = 'play';
+    // Climax tension: the 3-tumbler crack ring is live beside the glowing
+    // dial, Lockdown is on, and the vault guard's red cone sweeps for
+    // the doorway the thief came through.
+    state.mode = 'crack';
+    state.crack = { marker: 0.46, direction: 1, speed: 1.35, zoneStart: 0.38, zoneWidth: 0.16, hits: 2 };
     museum.vaultDoor.open = true;
     state.player.x = 1041;
     state.player.y = 470;
@@ -79,7 +96,7 @@ export function applyShotState(state, shotName) {
     state.messageTime = 3;
     guardAt(museum.guards[0], 880, 300, Math.PI * 0.3);
     guardAt(museum.guards[1], 780, 430, 0);
-    guardAt(museum.guards[2], 950, 430, Math.PI / 2);
+    guardAt(museum.guards[2], 950, 430, -Math.PI * 0.75);
     museum.guards[2].alert = 90;
     museum.cameras[0].angle = Math.PI * 0.6;
     museum.cameras[1].angle = Math.PI * 0.4;
@@ -105,7 +122,7 @@ export function applyShotState(state, shotName) {
   state.winStats = { loot: 7700, timeLeft: 96, alarmPeak: 62, rating: 'SHADOW', lootTaken: 4 };
   guardAt(museum.guards[0], 700, 260, Math.PI);
   guardAt(museum.guards[1], 600, 560, 0);
-  guardAt(museum.guards[2], 1080, 300, -Math.PI / 2);
+  guardAt(museum.guards[2], 680, 340, -Math.PI / 2);
   return state;
 }
 

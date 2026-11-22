@@ -4,6 +4,14 @@
 
 import { PALETTE, HUD_H, VIEW_W, CONTROLS_TEXT } from './config.js';
 
+export function alarmStatusText(alarm) {
+  const pct = Math.round(alarm);
+  if (pct <= 0) return 'Undetected';
+  if (pct <= 39) return 'Cautious — stay out of sight';
+  if (pct <= 69) return 'Suspicious — break line of sight';
+  return 'LOCKDOWN — guards chase!';
+}
+
 export function renderHud(ctx, state) {
   ctx.fillStyle = '#100d0a';
   ctx.fillRect(0, 0, VIEW_W, HUD_H);
@@ -36,7 +44,7 @@ export function renderHud(ctx, state) {
   ctx.fillStyle = '#2b2620';
   ctx.fillRect(meterX, 24, meterW, 16);
   const alarmRatio = Math.max(0, Math.min(1, state.alarm / 100));
-  ctx.fillStyle = state.alarm >= 70 ? PALETTE.alarmHigh : state.alarm >= 35 ? PALETTE.gold : PALETTE.alarmLow;
+  ctx.fillStyle = state.alarm >= 70 ? PALETTE.alarmHigh : state.alarm >= 40 ? PALETTE.gold : state.alarm > 0 ? '#a8c46a' : PALETTE.alarmLow;
   ctx.fillRect(meterX, 24, meterW * alarmRatio, 16);
   ctx.strokeStyle = '#c9a24b';
   ctx.lineWidth = 1;
@@ -48,7 +56,7 @@ export function renderHud(ctx, state) {
   ctx.textAlign = 'left';
   ctx.fillStyle = PALETTE.muted;
   ctx.font = '600 11px Verdana, sans-serif';
-  ctx.fillText(state.alarm >= 70 ? 'LOCKDOWN — guards chase!' : state.alarm >= 35 ? 'Suspicious — stay out of sight' : 'Undetected', meterX, 50);
+  ctx.fillText(alarmStatusText(state.alarm), meterX, 50);
 
   // Objective.
   ctx.fillStyle = PALETTE.gold;
@@ -67,10 +75,10 @@ export function renderHud(ctx, state) {
   ctx.fillStyle = state.timeLeft < 45 ? PALETTE.alarmHigh : PALETTE.text;
   ctx.font = '700 22px Verdana, sans-serif';
   ctx.textAlign = 'right';
-  ctx.fillText(`${minutes}:${String(seconds).padStart(2, '0')}`, 1264, 22);
+  ctx.fillText(`${minutes}:${String(seconds).padStart(2, '0')}`, 1256, 22);
   ctx.fillStyle = PALETTE.muted;
   ctx.font = '600 11px Verdana, sans-serif';
-  ctx.fillText('until lockdown', 1264, 44);
+  ctx.fillText('until lockdown', 1256, 44);
   ctx.textAlign = 'left';
 
   // Gadget + stamina strip at the bottom of the floor.
@@ -90,7 +98,9 @@ export function renderHud(ctx, state) {
   ctx.strokeRect(760, 692, 140, 12);
   ctx.fillStyle = PALETTE.muted;
   ctx.font = '600 11px Verdana, sans-serif';
-  ctx.fillText(CONTROLS_TEXT, 920, 698);
+  ctx.textAlign = 'right';
+  ctx.fillText(CONTROLS_TEXT, 1216, 698);
+  ctx.textAlign = 'left';
 }
 
 export function renderBanner(ctx, title, lines, accent) {
@@ -115,6 +125,42 @@ export function renderBanner(ctx, title, lines, accent) {
   ctx.textAlign = 'left';
 }
 
+export function renderGetawayCard(ctx, stats) {
+  // Compact, sleek, translucent: 480 x 300 = 15.6% of the 1280 x 720
+  // frame, parked on the right so the museum stays visible behind it.
+  const cardX = 724;
+  const cardY = 190;
+  const cardW = 480;
+  const cardH = 300;
+  const minutes = Math.floor(stats.timeLeft / 60);
+  const seconds = Math.floor(stats.timeLeft % 60);
+  ctx.fillStyle = 'rgba(10,12,20,0.72)';
+  ctx.fillRect(cardX, cardY, cardW, cardH);
+  ctx.strokeStyle = PALETTE.gold;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cardX, cardY, cardW, cardH);
+  ctx.strokeStyle = 'rgba(201,162,75,0.45)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cardX + 6, cardY + 6, cardW - 12, cardH - 12);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#7fc97f';
+  ctx.font = '700 26px Georgia, serif';
+  ctx.fillText('CLEAN GETAWAY', 964, cardY + 34);
+  ctx.fillStyle = PALETTE.gold;
+  ctx.font = '700 44px Georgia, serif';
+  ctx.fillText(stats.rating, 964, cardY + 92);
+  ctx.fillStyle = PALETTE.text;
+  ctx.font = '600 16px Verdana, sans-serif';
+  ctx.fillText(`Sun Dial stolen  ·  Loot $${stats.loot.toLocaleString('en-US')} (${stats.lootTaken} of 4)`, 964, cardY + 148);
+  ctx.fillText(`Time to spare ${minutes}:${String(seconds).padStart(2, '0')}  ·  Peak alarm ${stats.alarmPeak}%`, 964, cardY + 178);
+  ctx.fillStyle = PALETTE.muted;
+  ctx.font = '600 13px Verdana, sans-serif';
+  ctx.fillText('The museum never saw you leave.', 964, cardY + 214);
+  ctx.fillText('Press R to run it again — quieter this time.', 964, cardY + 252);
+  ctx.textAlign = 'left';
+}
+
 export function renderCrackBar(ctx, crack) {
   const barX = 440;
   const barY = 610;
@@ -125,9 +171,9 @@ export function renderCrackBar(ctx, crack) {
   ctx.lineWidth = 2;
   ctx.strokeRect(barX - 20, barY - 44, barW + 40, 86);
   ctx.fillStyle = PALETTE.text;
-  ctx.font = '700 14px Verdana, sans-serif';
+  ctx.font = '700 13px Verdana, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('CRACK THE VAULT — press E when the needle is in the gold zone', 640, barY - 24);
+  ctx.fillText('CRACK THE VAULT — press E inside the gold zone', 640, barY - 24);
   ctx.fillStyle = '#2b2620';
   ctx.fillRect(barX, barY, barW, 18);
   const zoneX = barX + crack.zoneStart * barW;

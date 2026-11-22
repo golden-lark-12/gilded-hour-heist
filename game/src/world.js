@@ -28,12 +28,15 @@ export function buildMuseum() {
   addWall(842, 380, 138, 12);
   addWall(1080, 380, 152, 12);
 
+  // Room labels sit on clear floor at the foot of each room, away from
+  // walls, props, cameras and the top banner zone: no label ever shares
+  // its patch of floor with another drawn element.
   const rooms = [
-    { name: 'ENTRY HALL', x: 48, y: 84, w: 382, h: 592, labelX: 66, labelY: 106 },
-    { name: 'GALLERY', x: 442, y: 84, w: 388, h: 296, labelX: 458, labelY: 106 },
-    { name: 'LASER HALL', x: 442, y: 392, w: 388, h: 284, labelX: 458, labelY: 414 },
-    { name: 'ANTECHAMBER', x: 842, y: 84, w: 390, h: 296, labelX: 858, labelY: 106 },
-    { name: 'VAULT', x: 842, y: 392, w: 390, h: 284, labelX: 858, labelY: 414 },
+    { name: 'ENTRY HALL', x: 48, y: 84, w: 382, h: 592, labelX: 170, labelY: 648 },
+    { name: 'GALLERY', x: 442, y: 84, w: 388, h: 296, labelX: 458, labelY: 352 },
+    { name: 'LASER HALL', x: 442, y: 392, w: 388, h: 284, labelX: 458, labelY: 400 },
+    { name: 'ANTECHAMBER', x: 842, y: 84, w: 390, h: 296, labelX: 858, labelY: 352 },
+    { name: 'VAULT', x: 842, y: 392, w: 390, h: 284, labelX: 858, labelY: 400 },
   ];
 
   const props = [
@@ -48,8 +51,8 @@ export function buildMuseum() {
     { kind: 'case', x: 520, y: 170, w: 74, h: 44 },
     { kind: 'case', x: 660, y: 250, w: 74, h: 44 },
     { kind: 'case', x: 560, y: 310, w: 74, h: 44 },
-    { kind: 'painting', x: 500, y: 92, w: 66, h: 18 },
-    { kind: 'painting', x: 700, y: 92, w: 66, h: 18 },
+    { kind: 'painting', x: 500, y: 138, w: 66, h: 18 },
+    { kind: 'painting', x: 700, y: 138, w: 66, h: 18 },
     { kind: 'rug', x: 520, y: 190, w: 230, h: 130 },
     // Laser hall: pillars break sight lines and give cover between beams.
     { kind: 'pillar', x: 500, y: 470, w: 30, h: 30 },
@@ -68,6 +71,42 @@ export function buildMuseum() {
   ];
   // Props that block movement and sight.
   const solids = props.filter((p) => p.kind !== 'rug' && p.kind !== 'stairs');
+
+  // Cool-indigo shadow cover: shaded alcoves tucked behind display cases,
+  // pillars and the vault pedestal. Visual only — they mark where a
+  // thief standing behind a prop is hard to spot.
+  const shadowZones = [
+    { x: 506, y: 214, w: 102, h: 30 },
+    { x: 646, y: 294, w: 102, h: 30 },
+    { x: 546, y: 354, w: 102, h: 20 },
+    { x: 486, y: 500, w: 58, h: 26 },
+    { x: 686, y: 500, w: 58, h: 26 },
+    { x: 586, y: 620, w: 58, h: 26 },
+    { x: 906, y: 214, w: 102, h: 30 },
+    { x: 1076, y: 294, w: 102, h: 30 },
+    { x: 1001, y: 557, w: 80, h: 28 },
+  ];
+
+  // Clear doorways: the gaps in the interior walls, marked on the floor
+  // with a gilded threshold so every route reads at a glance.
+  const doorways = [
+    { x: 430, y: 280, w: 12, h: 60 },
+    { x: 430, y: 490, w: 12, h: 50 },
+    { x: 682, y: 380, w: 60, h: 12 },
+    { x: 830, y: 320, w: 12, h: 60 },
+  ];
+
+  // Vent grates: metallic grates set in the walls, joined by faint dashed
+  // blueprint duct lines that show the crawl route between rooms.
+  const vents = [
+    { x: 424, y: 286, w: 24, h: 48, horizontal: false },
+    { x: 500, y: 374, w: 48, h: 24, horizontal: true },
+    { x: 824, y: 326, w: 24, h: 48, horizontal: false },
+  ];
+  const ductPath = [
+    [436, 310], [620, 310], [712, 310], [712, 386], [712, 440],
+    [900, 440], [1000, 440], [1041, 480],
+  ];
 
   const loot = [
     { id: 'painting', name: 'Gilded Portrait', value: LOOT_VALUES.painting, x: 533, y: 93, taken: false, radius: 26 },
@@ -111,7 +150,7 @@ export function buildMuseum() {
   ];
 
   return {
-    walls, rooms, props, solids, loot, terminals, guards, cameras, lasers,
+    walls, rooms, props, solids, shadowZones, doorways, vents, ductPath, loot, terminals, guards, cameras, lasers,
     vaultDoor: { x: 980, y: 380, w: 100, h: 12, open: false },
     escape: { x: 62, y: 98, w: 84, h: 64 },
     entrance: { x: 110, y: 640 },

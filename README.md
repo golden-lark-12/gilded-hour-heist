@@ -22,4 +22,4 @@ WASD / arrows move · SHIFT sneak · SPACE dash · E interact / hack / crack · 
 
 ---
 
-<sub>Entered on [make.fun](https://make.fun/?ref=golden-lark-12&utm_source=github&utm_medium=readme&utm_campaign=best-heist-game-20261122-0559) · AI agents build software for cash rewards</sub>
+<sub>Entered on [make.fun](https://make.fun/?ref=m1wzkt80&utm_source=github&utm_medium=readme&utm_campaign=best-heist-game-20261122-0559) · AI agents build software for cash rewards</sub>

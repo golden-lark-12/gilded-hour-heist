@@ -9,9 +9,9 @@ import { createAudio } from './audio.js';
 import {
   drawFloor, drawProps, drawWalls, drawVisionCone, drawGuard, drawCamera,
   drawLasers, drawThief, drawLoot, drawTerminals, drawParticles, renderLighting,
-  drawSmoke,
+  drawSmoke, drawVents, drawPatrolPaths,
 } from './render.js';
-import { renderHud, renderBanner, renderCrackBar } from './hud.js';
+import { renderHud, renderBanner, renderCrackBar, renderGetawayCard } from './hud.js';
 import { stateForShot, SHOT_NAMES } from './shots.js';
 import { DETECTION } from './config.js';
 import { circleHitsRect } from './world.js';
@@ -59,6 +59,7 @@ function drawWorld() {
   const museum = state.museum;
   const occluders = coneOccluders();
   drawFloor(ctx, museum);
+  drawPatrolPaths(ctx, museum);
   drawProps(ctx, museum);
   drawLoot(ctx, museum, state.time);
 
@@ -67,18 +68,19 @@ function drawWorld() {
   const camerasOff = state.camerasDisabled > 0 || state.empTime > 0;
   for (const camera of museum.cameras) {
     if (!camerasOff) {
-      drawVisionCone(ctx, camera.x, camera.y, camera.angle, DETECTION.cameraRange, DETECTION.cameraHalfAngle, PALETTE.cameraCone, occluders);
+      drawVisionCone(ctx, camera.x, camera.y, camera.angle, DETECTION.cameraRange, DETECTION.cameraHalfAngle, PALETTE.cameraCone, occluders, PALETTE.cameraConeEdge);
     }
   }
   for (const guard of museum.guards) {
     const hot = guard.alert > 60 || state.alarm >= DETECTION.chaseAt;
-    drawVisionCone(ctx, guard.x, guard.y, guard.angle, DETECTION.guardRange, DETECTION.guardHalfAngle, hot ? PALETTE.coneHot : PALETTE.cone, occluders);
+    drawVisionCone(ctx, guard.x, guard.y, guard.angle, DETECTION.guardRange, DETECTION.guardHalfAngle, hot ? PALETTE.coneHot : PALETTE.cone, occluders, hot ? PALETTE.coneHotEdge : PALETTE.coneEdge);
   }
-  for (const camera of museum.cameras) drawCamera(ctx, camera, camerasOff);
+  for (const camera of museum.cameras) drawCamera(ctx, camera, camerasOff, state.time);
   for (const guard of museum.guards) drawGuard(ctx, guard, state.alarm >= DETECTION.chaseAt);
   drawThief(ctx, state.player, state.lanternOn);
   drawParticles(ctx, state.particles);
   drawWalls(ctx, museum);
+  drawVents(ctx, museum);
   renderLighting(ctx, state.player, state.lanternOn, museum.vaultDoor.open);
 
   // Lantern halo on top of the dark, so the thief is never lost.
@@ -128,17 +130,20 @@ function drawPrompt() {
 
 function drawMessage() {
   if (state.messageTime <= 0 || !state.message) return;
-  ctx.font = '700 15px Verdana, sans-serif';
+  // Dedicated banner zone: a slim pill just below the HUD, centred on
+  // the top wall band. Room labels now live at the foot of each room
+  // and the gallery paintings sit lower, so nothing shares this zone.
+  ctx.font = '700 14px Verdana, sans-serif';
   const width = ctx.measureText(state.message).width + 28;
   ctx.fillStyle = 'rgba(16,13,10,0.88)';
-  ctx.fillRect(640 - width / 2, 72, width, 32);
+  ctx.fillRect(640 - width / 2, 70, width, 30);
   ctx.strokeStyle = PALETTE.gold;
   ctx.lineWidth = 1;
-  ctx.strokeRect(640 - width / 2, 72, width, 32);
+  ctx.strokeRect(640 - width / 2, 70, width, 30);
   ctx.fillStyle = PALETTE.gold;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(state.message, 640, 88);
+  ctx.fillText(state.message, 640, 86);
   ctx.textAlign = 'left';
 }
 
@@ -188,16 +193,9 @@ function frame(now) {
   } else if (state.paused) {
     renderBanner(ctx, 'PAUSED', ['The guards hold their patrol. The clock holds too.', '', 'Press P to keep moving.'], PALETTE.gold);
   } else if (state.mode === 'win' && state.winStats) {
-    const stats = state.winStats;
-    const minutes = Math.floor(stats.timeLeft / 60);
-    const seconds = Math.floor(stats.timeLeft % 60);
-    renderBanner(ctx, 'CLEAN GETAWAY', [
-      `Rating: ${stats.rating}  ·  Loot: $${stats.loot.toLocaleString('en-US')} (${stats.lootTaken} of 4 targets)`,
-      `Time to spare: ${minutes}:${String(seconds).padStart(2, '0')}  ·  Peak alarm: ${stats.alarmPeak}%`,
-      'The Sun Dial is gone before dawn. The museum never saw you leave.',
-      '',
-      'Press R to run it again — quieter this time.',
-    ], '#7fc97f');
+    // Compact translucent getaway card: the museum stays visible
+    // behind it instead of a giant opaque modal.
+    renderGetawayCard(ctx, state.winStats);
   } else if (state.mode === 'caught') {
     renderBanner(ctx, 'CAUGHT', [
       state.catchReason,
